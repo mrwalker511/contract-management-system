@@ -34,7 +34,7 @@ def test_register_duplicate_email(client, test_user):
             "email": "test@example.com",
             "full_name": "Duplicate User",
             "role": "legal",
-            "password": "pass123"
+            "password": "validpass123"
         }
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST

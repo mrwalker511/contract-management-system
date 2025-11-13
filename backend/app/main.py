@@ -1,11 +1,24 @@
 """
 Main FastAPI application
 """
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.database import engine, Base
 from .routes import auth_router, users_router, templates_router, contracts_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager"""
+    # Startup: Create database tables (skip in testing)
+    import os
+    if not os.getenv("TESTING"):
+        Base.metadata.create_all(bind=engine)
+    yield
+    # Shutdown: cleanup if needed
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -14,7 +27,8 @@ app = FastAPI(
     description="Contract Management System API",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -25,12 +39,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def on_startup():
-    """Create database tables on startup"""
-    Base.metadata.create_all(bind=engine)
 
 
 # Include routers

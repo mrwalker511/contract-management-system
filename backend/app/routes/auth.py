@@ -76,8 +76,11 @@ def login(
     Raises:
         HTTPException: If credentials are invalid
     """
+    # Normalize email to lowercase for case-insensitive lookup
+    email = form_data.username.lower().strip()
+
     # Find user by email (OAuth2 uses 'username' field)
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(User.email == email).first()
 
     # Verify user exists and password is correct
     if not user or not verify_password(form_data.password, user.hashed_password):

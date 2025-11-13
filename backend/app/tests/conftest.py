@@ -43,16 +43,18 @@ def db_session():
 @pytest.fixture
 def client(db_session):
     """Create test client with overridden database"""
+    # Set testing flag to skip lifespan database creation
+    import os
+    os.environ["TESTING"] = "1"
+
     # Override database dependency
     app.dependency_overrides[get_db] = override_get_db
-
-    # Disable startup events for testing
-    app.router.on_startup = []
 
     with TestClient(app, raise_server_exceptions=True) as test_client:
         yield test_client
 
     app.dependency_overrides.clear()
+    del os.environ["TESTING"]
 
 
 @pytest.fixture
