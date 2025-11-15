@@ -1,7 +1,7 @@
 /**
  * Dashboard Layout - Main application layout with navigation
  */
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Typography, theme } from 'antd';
 import {
   FileTextOutlined,
