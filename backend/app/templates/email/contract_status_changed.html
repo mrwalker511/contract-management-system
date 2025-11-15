@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Contract Status Changed - {{ contract_title }}{% endblock %}
+
+{% block content %}
+<h2>Contract Status Changed</h2>
+
+<p>Hello,</p>
+
+<p>The status of a contract has been updated:</p>
+
+<div class="info-box">
+    <p><strong>Contract Title:</strong> {{ contract_title }}</p>
+    <p><strong>Contract ID:</strong> #{{ contract_id }}</p>
+    <p><strong>Previous Status:</strong> {{ old_status }}</p>
+    <p><strong>New Status:</strong> {{ new_status }}</p>
+    <p><strong>Changed By:</strong> {{ changed_by_name }}</p>
+</div>
+
+<p>Please review the updated contract details.</p>
+
+<a href="#" class="button">View Contract</a>
+
+<p>Thank you,<br>Contract Management System</p>
+{% endblock %}

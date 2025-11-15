@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Contract Management System{% endblock %}
+
+{% block content %}
+<h2>Welcome to Contract Management System</h2>
+
+<p>Hello {{ user_name }},</p>
+
+<p>Welcome to the Contract Management System! Your account has been successfully created.</p>
+
+<div class="info-box">
+    <p><strong>Email:</strong> {{ user_email }}</p>
+    <p><strong>Role:</strong> {{ user_role }}</p>
+</div>
+
+<p>You can now log in and start managing contracts. Here are some things you can do:</p>
+
+<ul>
+    <li>Create and manage contracts</li>
+    <li>Collaborate with team members</li>
+    <li>Track contract status and versions</li>
+    <li>Receive notifications for important updates</li>
+</ul>
+
+<a href="#" class="button">Go to Login</a>
+
+<p>If you have any questions, please contact your system administrator.</p>
+
+<p>Thank you,<br>Contract Management System</p>
+{% endblock %}

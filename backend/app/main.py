@@ -7,6 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.database import engine, Base
 from .routes import auth_router, users_router, templates_router, contracts_router
+from .api.documents import router as documents_router
+from .api.versions import router as versions_router
+from .api.audit import router as audit_router
 
 
 @asynccontextmanager
@@ -46,6 +49,10 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 app.include_router(templates_router, prefix="/api/v1")
 app.include_router(contracts_router, prefix="/api/v1")
+# Phase 2 routers
+app.include_router(documents_router, prefix="/api/v1")
+app.include_router(versions_router, prefix="/api/v1")
+app.include_router(audit_router, prefix="/api/v1")
 
 
 @app.get("/")

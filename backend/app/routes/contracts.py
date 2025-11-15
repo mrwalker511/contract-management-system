@@ -1,7 +1,7 @@
 """
 Contract management routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
@@ -11,6 +11,8 @@ from ..core.security import get_current_user
 from ..models.user import User, UserRole
 from ..models.contract import Contract, ContractStatus
 from ..schemas.contract import ContractCreate, ContractUpdate, ContractResponse
+from ..services.audit_service import log_create, log_update, log_delete, AuditService
+from ..services.version_service import VersionService
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -23,6 +25,7 @@ def generate_contract_number() -> str:
 @router.post("/", response_model=ContractResponse, status_code=status.HTTP_201_CREATED)
 async def create_contract(
     contract_data: ContractCreate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -31,6 +34,7 @@ async def create_contract(
 
     Args:
         contract_data: Contract creation data
+        request: FastAPI request object
         current_user: Current authenticated user
         db: Database session
 
@@ -49,6 +53,24 @@ async def create_contract(
     db.add(db_contract)
     db.commit()
     db.refresh(db_contract)
+
+    # Create initial version
+    VersionService.create_version(
+        db=db,
+        contract=db_contract,
+        user=current_user,
+        change_summary="Initial contract creation",
+    )
+
+    # Log creation
+    await log_create(
+        db=db,
+        user=current_user,
+        resource_type="contract",
+        resource_id=db_contract.id,
+        description=f"Created contract '{db_contract.title}' ({contract_number})",
+        request=request,
+    )
 
     return db_contract
 
@@ -138,6 +160,7 @@ async def get_contract(
 async def update_contract(
     contract_id: int,
     contract_data: ContractUpdate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -147,6 +170,7 @@ async def update_contract(
     Args:
         contract_id: Contract ID
         contract_data: Updated contract data
+        request: FastAPI request object
         current_user: Current authenticated user
         db: Database session
 
@@ -170,6 +194,16 @@ async def update_contract(
             detail="Not authorized to update this contract"
         )
 
+    # Store old values for change tracking
+    old_values = {
+        "title": contract.title,
+        "description": contract.description,
+        "content": contract.content,
+        "status": contract.status,
+        "contract_value": contract.contract_value,
+        "counterparty_name": contract.counterparty_name,
+    }
+
     # Update contract fields
     update_data = contract_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -178,12 +212,46 @@ async def update_contract(
     db.commit()
     db.refresh(contract)
 
+    # Track changes
+    new_values = {
+        "title": contract.title,
+        "description": contract.description,
+        "content": contract.content,
+        "status": contract.status,
+        "contract_value": contract.contract_value,
+        "counterparty_name": contract.counterparty_name,
+    }
+
+    changes = AuditService.create_change_diff(old_values, new_values)
+
+    # Create new version if significant changes were made
+    if changes:
+        VersionService.create_version(
+            db=db,
+            contract=contract,
+            user=current_user,
+            change_summary=f"Updated contract fields: {', '.join(changes.keys())}",
+            changes=changes,
+        )
+
+        # Log update
+        await log_update(
+            db=db,
+            user=current_user,
+            resource_type="contract",
+            resource_id=contract_id,
+            description=f"Updated contract '{contract.title}'",
+            changes=changes,
+            request=request,
+        )
+
     return contract
 
 
 @router.delete("/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contract(
     contract_id: int,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -192,6 +260,7 @@ async def delete_contract(
 
     Args:
         contract_id: Contract ID
+        request: FastAPI request object
         current_user: Current authenticated user
         db: Database session
 
@@ -211,6 +280,20 @@ async def delete_contract(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this contract"
         )
+
+    # Store contract info before deletion
+    contract_title = contract.title
+    contract_number = contract.contract_number
+
+    # Log deletion before actually deleting
+    await log_delete(
+        db=db,
+        user=current_user,
+        resource_type="contract",
+        resource_id=contract_id,
+        description=f"Deleted contract '{contract_title}' ({contract_number})",
+        request=request,
+    )
 
     db.delete(contract)
     db.commit()

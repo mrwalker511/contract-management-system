@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}New Contract Created - {{ contract_title }}{% endblock %}
+
+{% block content %}
+<h2>New Contract Created</h2>
+
+<p>Hello,</p>
+
+<p>A new contract has been created in the system:</p>
+
+<div class="info-box">
+    <p><strong>Contract Title:</strong> {{ contract_title }}</p>
+    <p><strong>Contract ID:</strong> #{{ contract_id }}</p>
+    <p><strong>Counterparty:</strong> {{ counterparty }}</p>
+    <p><strong>Status:</strong> {{ status }}</p>
+    <p><strong>Created By:</strong> {{ creator_name }}</p>
+</div>
+
+<p>Please review the contract details at your earliest convenience.</p>
+
+<a href="#" class="button">View Contract</a>
+
+<p>Thank you,<br>Contract Management System</p>
+{% endblock %}

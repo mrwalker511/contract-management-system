@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Contract Reminder - {{ contract_title }}{% endblock %}
+
+{% block content %}
+<h2>Contract Reminder</h2>
+
+<p>Hello,</p>
+
+<p>This is a reminder about a contract that requires your attention:</p>
+
+<div class="info-box">
+    <p><strong>Contract Title:</strong> {{ contract_title }}</p>
+    <p><strong>Contract ID:</strong> #{{ contract_id }}</p>
+    <p><strong>End Date:</strong> {{ end_date }}</p>
+    <p><strong>Reminder Type:</strong> {{ reminder_type }}</p>
+</div>
+
+<p>Please take appropriate action before the deadline.</p>
+
+<a href="#" class="button">View Contract</a>
+
+<p>Thank you,<br>Contract Management System</p>
+{% endblock %}
